@@ -63,16 +63,17 @@ class Exp(QtGui.QWidget):
 
         Lots of things are commented in/out b/c of testing.
         """
-        #self.ui.view.updateScene([self.scene.sceneRect()])
+        #self.view.updateScene([self.scene.sceneRect()])
         #self.scene.update()
         
         # Currently must process events for the scene to be updated (why?)
-        QtGui.qApp.processEvents()
+        #QtGui.qApp.processEvents()
 
         # something here draws the scene to the view
         #self.glw.makeCurrent()
         #self.glw.paintGL()
         #self.glw.updateGL()
+        self.glw.update()
         self.glw.swapBuffers()
         new_time = time.time()
 
@@ -82,6 +83,7 @@ class Exp(QtGui.QWidget):
 
     def jubba(self):
         txt = self.addSimpleText("Jubba",loc=(400,300))
+
         self.updateScreen()
         #QtCore.QTimer.singleShot(1000,self.updateScreen)
         QtCore.QTimer.singleShot(2000,self.wubba)

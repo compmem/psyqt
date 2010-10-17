@@ -124,6 +124,8 @@ class parallel(QState):
         QState.__init__(self, QState.ParallelStates,
                         parent=self._saved_parent)        
 
+        exp._add_transition_if_needed(self)
+
     def __enter__(self):
         # push self as current parent
         exp._current_parent = self
@@ -137,6 +139,8 @@ class serial(QState):
         self._saved_parent = exp._current_parent
         QState.__init__(self, QState.ExclusiveStates,
                         parent=self._saved_parent)        
+
+        exp._add_transition_if_needed(self)
 
     def __enter__(self):
         # push a serial parent state

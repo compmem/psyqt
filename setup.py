@@ -12,5 +12,5 @@ setup(name='psyqt',
       author=['Per B. Sederberg'],
       maintainer=['Per B. Sederberg'],
       maintainer_email=['psederberg@gmail.com'],
-      url=['http://github.com/psederberg/psyqt'])
+      url=['http://github.com/compmem/psyqt'])
 

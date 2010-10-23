@@ -10,6 +10,7 @@
 # import main modules
 from __future__ import with_statement
 import sys
+import random
 
 # Import Qt modules
 from PyQt4.QtCore import QState,QFinalState,QStateMachine
@@ -174,12 +175,21 @@ def serial_group(fn):
 
 
 class WaitState(ExpState):
-    def __init__(self, duration, parent = None):
-        self.duration = duration
+    def __init__(self, duration, jitter=None, parent = None):
+        if jitter is None:
+            jitter = 0
+        else:
+            if isinstance(jitter,list):
+                # treat it as a range
+                jitter = random.randint(jitter[0],jitter[1])
+            else:
+                # start range at zero
+                jitter = random.randint(0,jitter)
+        self.duration = duration + jitter
         ExpState.__init__(self, parent=parent)
     def onEntry(self, ev):
         QTimer.singleShot(self.duration,self._finalize)
-def wait(duration):
+def wait(duration, jitter=None):
     s = WaitState(duration, parent=exp._current_parent)
     exp._add_transition_if_needed(s)
     return s

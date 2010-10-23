@@ -67,7 +67,7 @@ class Exp(QtGui.QWidget):
         #self.scene.update()
         
         # Currently must process events for the scene to be updated (why?)
-        #QtGui.qApp.processEvents()
+        QtGui.qApp.processEvents()
 
         # something here draws the scene to the view
         #self.glw.makeCurrent()

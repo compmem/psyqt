@@ -15,6 +15,7 @@ import random
 # Import Qt modules
 from PyQt4.QtCore import QState,QFinalState,QStateMachine
 from PyQt4.QtCore import QTimer,QThread
+import PyQt4.QtCore as QtCore
 from PyQt4.QtGui import QApplication
 
 # set up the basic timer
@@ -73,7 +74,7 @@ class ExpState(QState):
     def _run(self):
         raise NotImplementedError("Subclasses must implement this.")
 
-    def get_wait_time(self):
+    def _get_wait_time(self):
         # use the state parent's timeline and the specific offset to
         # determine the desired event time of the state
         desired_time = self.parent.timeline.start_time + self._event_time/1000.
@@ -90,7 +91,7 @@ class ExpState(QState):
         run based on the timeline.
         """
         # figure out how long to wait
-        wait_time = self.get_wait_time()
+        wait_time = self._get_wait_time()
 
         # schedule the run
         QTimer.singleShot(wait_time,self._run)
@@ -138,7 +139,7 @@ class Experiment(QApplication):
                 # set the new state as the initial
                 parent.setInitialState(state)
 
-    def _event_time(self):
+    def get_event_time(self):
         """
         Return the time range (time, range) in which we are sure the
         latest set of events occurred.

@@ -17,6 +17,11 @@ from PyQt4.QtGui import QWidget,QGraphicsScene,QGraphicsView,QPainter
 from PyQt4.QtGui import QGraphicsSimpleTextItem,QFont
 from PyQt4.QtOpenGL import QGLWidget,QGLFormat
 
+# OpenGL modules
+from OpenGL.GL import glDrawBuffer,GL_BACK,glColor4f
+from OpenGL.GL import glBegin,GL_POINTS,glVertex2i
+from OpenGL.GL import glEnd,glFinish
+
 # import local modules
 from experiment import exp,ExpState
 from experiment import Parallel,Serial,wait,now
@@ -49,6 +54,28 @@ class Video(QWidget):
         self.view.setViewport(self.glw)
 
         QTimer.singleShot(0,self.glw.swapBuffers)
+
+    def swapBuffers(self):
+
+        # first call the swap on the QGLWidget
+        self.glw.swapBuffers()
+
+        # The following is taken from the PsychToolbox
+        # Draw a single pixel in left-top area of back-buffer. This will wait/stall the rendering pipeline
+        # until the buffer flip has happened, aka immediately after the VBL has started.
+        # We need the pixel as "synchronization token", so the following glFinish() really
+        # waits for VBL instead of just "falling through" due to the asynchronous nature of
+        # OpenGL:
+        glDrawBuffer(GL_BACK)
+        # We draw our single pixel with an alpha-value of zero - so effectively it doesn't
+        # change the color buffer - just the z-buffer if z-writes are enabled...
+        glColor4f(0,0,0,0)
+        glBegin(GL_POINTS)
+        glVertex2i(10,10)
+        glEnd()
+        # This glFinish() will wait until point drawing is finished, ergo backbuffer was ready
+        # for drawing, ergo buffer swap in sync with start of VBL has happened.
+        glFinish()
 
     def show(self):
         # shows the viewer widget
@@ -93,8 +120,15 @@ class HideState(ExpState):
 
 class SwapState(ExpState):
     def _run(self):
-        print "Swap:", long(now()*1000)
-        vid.glw.swapBuffers()
+        start = long(now()*1000)
+        vid.swapBuffers()
+        print "Swap:", start, long(now()*1000)-start
+        # record when the swap returns indicating the vertical retrace
+        # just happened.
+        
+        # essentially, we need to know when the vertical retrace
+        # actually happened
+
         self._finalize()
 
 class PreprocState(Parallel):
@@ -223,20 +257,20 @@ if __name__ == "__main__":
 
     show(Text("+",loc=(400,300)),duration=1000)
     wait(1000)
-    # with Parallel():
-    #     show(Text("Jubba",loc=(400,300)),duration=1000)
-    #     show(Text("Jubba2",loc=(200,100)),duration=2000)
-    #     with Serial():
-    #         wait(1000)
-    #         show(Text("Wubba",loc=(300,200)),duration=1000)
-    #         show(Text("Wubba2",loc=(300,200)),duration=2000)
-    #     with Serial():
-    #         wait(2000)
-    #         show(Text("Lubba",loc=(500,400)),duration=2000)
+    with Parallel():
+        show(Text("Jubba",loc=(400,300)),duration=1000)
+        show(Text("Jubba2",loc=(200,100)),duration=2000)
+        with Serial():
+            wait(1000)
+            show(Text("Wubba",loc=(300,200)),duration=1000)
+            show(Text("Wubba2",loc=(300,200)),duration=2000)
+        with Serial():
+            wait(2000)
+            show(Text("Lubba",loc=(500,400)),duration=2000)
 
     
-    for i in range(100):
-        show(Text(str(i),loc=(400,300)),duration=10)
+    # for i in range(100):
+    #     show(Text(str(i),loc=(400,300)),duration=50)
 
     # run the experiment
     run()

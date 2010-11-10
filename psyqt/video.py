@@ -10,6 +10,7 @@
 # import main modules
 from __future__ import with_statement
 import random
+import os
 
 # Import Qt modules
 from PyQt4.QtCore import QTimer,Qt,QState
@@ -20,7 +21,7 @@ from PyQt4.QtOpenGL import QGLWidget,QGLFormat
 # OpenGL modules
 from OpenGL.GL import glDrawBuffer,GL_BACK,glColor4f
 from OpenGL.GL import glBegin,GL_POINTS,glVertex2i
-from OpenGL.GL import glEnd,glFinish
+from OpenGL.GL import glEnd,glFinish,glPointSize
 
 # import local modules
 from experiment import exp,ExpState
@@ -46,22 +47,32 @@ class Video(QWidget):
         self.view.setFixedSize(800,600)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        
+
+        # set the screen sync
+        val = "1"
+        # Set for nVidia linux
+        os.environ["__GL_SYNC_TO_VBLANK"] = val
+        # Set for recent linux Mesa DRI Radeon
+        os.environ["LIBGL_SYNC_REFRESH"] = val
+
         qglf = QGLFormat()
         qglf.setSampleBuffers(True)
+        #qglf.setSwapInterval(1)
         self.glw = QGLWidget(qglf)
         self.glw.setAutoBufferSwap(False)
         self.view.setViewport(self.glw)
-
+        
         QTimer.singleShot(0,self.glw.swapBuffers)
 
     def swapBuffers(self):
-
         # first call the swap on the QGLWidget
         self.glw.swapBuffers()
 
+        self.glw.makeCurrent()
+
         # The following is taken from the PsychToolbox
-        # Draw a single pixel in left-top area of back-buffer. This will wait/stall the rendering pipeline
+        # Draw a single pixel in left-top area of back-buffer. 
+        # This will wait/stall the rendering pipeline
         # until the buffer flip has happened, aka immediately after the VBL has started.
         # We need the pixel as "synchronization token", so the following glFinish() really
         # waits for VBL instead of just "falling through" due to the asynchronous nature of
@@ -69,7 +80,7 @@ class Video(QWidget):
         glDrawBuffer(GL_BACK)
         # We draw our single pixel with an alpha-value of zero - so effectively it doesn't
         # change the color buffer - just the z-buffer if z-writes are enabled...
-        glColor4f(0,0,0,0)
+        glColor4f(0.0,0.0,0.0,0.0)
         glBegin(GL_POINTS)
         glVertex2i(10,10)
         glEnd()
@@ -255,22 +266,21 @@ if __name__ == "__main__":
 
     from experiment import run
 
-    show(Text("+",loc=(400,300)),duration=1000)
-    wait(1000)
+    show(Text("+",loc=(400,300)),duration=1005)
+    wait(1005)
     with Parallel():
-        show(Text("Jubba",loc=(400,300)),duration=1000)
-        show(Text("Jubba2",loc=(200,100)),duration=2000)
+        show(Text("Jubba",loc=(400,300)),duration=1005)
+        show(Text("Jubba2",loc=(200,100)),duration=2010)
         with Serial():
-            wait(1000)
-            show(Text("Wubba",loc=(300,200)),duration=1000)
-            show(Text("Wubba2",loc=(300,200)),duration=2000)
+            wait(1005)
+            show(Text("Wubba",loc=(300,200)),duration=1005)
+            show(Text("Wubba2",loc=(300,200)),duration=2010)
         with Serial():
-            wait(2000)
-            show(Text("Lubba",loc=(500,400)),duration=2000)
+            wait(2010)
+            show(Text("Lubba",loc=(500,400)),duration=2010)
 
-    
-    # for i in range(100):
-    #     show(Text(str(i),loc=(400,300)),duration=50)
+    # for i in range(10):
+    #     show(Text(str(i),loc=(400,300)),duration=10)
 
     # run the experiment
     run()

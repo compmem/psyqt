@@ -187,6 +187,7 @@ class Experiment(QApplication):
 # set up Parallel and serial parent states
 class Parent(QState):
     def __init__(self, ChildMode=QState.ExclusiveStates, new_timeline=False):
+        # Must fix the following hack
         try:
             exp
             no_exp = False

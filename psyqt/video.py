@@ -48,7 +48,7 @@ class Video(QWidget):
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        # set the screen sync
+        # set the screen sync to vertical retrace
         val = "1"
         # Set for nVidia linux
         os.environ["__GL_SYNC_TO_VBLANK"] = val
@@ -57,7 +57,6 @@ class Video(QWidget):
 
         qglf = QGLFormat()
         qglf.setSampleBuffers(True)
-        #qglf.setSwapInterval(1)
         self.glw = QGLWidget(qglf)
         self.glw.setAutoBufferSwap(False)
         self.view.setViewport(self.glw)
@@ -68,7 +67,7 @@ class Video(QWidget):
         # first call the swap on the QGLWidget
         self.glw.swapBuffers()
 
-        self.glw.makeCurrent()
+        #self.glw.makeCurrent()
 
         # The following is taken from the PsychToolbox
         # Draw a single pixel in left-top area of back-buffer. 
@@ -279,8 +278,8 @@ if __name__ == "__main__":
             wait(2010)
             show(Text("Lubba",loc=(500,400)),duration=2010)
 
-    # for i in range(10):
-    #     show(Text(str(i),loc=(400,300)),duration=10)
+    for i in range(10):
+        show(Text(str(i),loc=(400,300)),duration=10)
 
     # run the experiment
     run()

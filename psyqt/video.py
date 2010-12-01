@@ -31,10 +31,10 @@ from experiment import Parallel,Serial,wait,now
 def_font = QFont("Helvetica")
 def_font.setPointSize(60)
 
-class Video(QWidget):
+class GUI():
     def __init__(self):
         # init the widget
-        QWidget.__init__(self)
+        #QWidget.__init__(self, parent)
 
         # set up the scene
         self.scene=QGraphicsScene()
@@ -60,11 +60,17 @@ class Video(QWidget):
         self.glw = QGLWidget(qglf)
         self.glw.setAutoBufferSwap(False)
         self.view.setViewport(self.glw)
+
+        self.view.show()
+
+        self.last_finish = 0
         
         QTimer.singleShot(0,self.glw.swapBuffers)
 
     def swapBuffers(self):
         # first call the swap on the QGLWidget
+        start = long(now()*1000)
+
         self.glw.swapBuffers()
 
         #self.glw.makeCurrent()
@@ -87,14 +93,20 @@ class Video(QWidget):
         # for drawing, ergo buffer swap in sync with start of VBL has happened.
         glFinish()
 
-    def show(self):
-        # shows the viewer widget
-        self.view.show()
+        finish = long(now()*1000)
+        fdiff = finish - self.last_finish
+        self.last_finish = finish
+        return (start,finish-start,fdiff)
+        
+
+    # def show(self):
+    #     # shows the viewer widget
+    #     self.view.show()
 
 
 # make video instance
-vid = Video()
-vid.show()
+gui = GUI()
+#gui.show()
 
 # litte constants
 LAG = 5
@@ -111,7 +123,7 @@ class ShowState(ExpState):
         # add the items
         print "Show:", long(now()*1000)
         for i in self.items:
-            vid.scene.addItem(i)
+            gui.scene.addItem(i)
         self._finalize()
 
 class HideState(ExpState):
@@ -125,14 +137,13 @@ class HideState(ExpState):
         # add the items
         print "Hide:", long(now()*1000)
         for i in self.items:
-            vid.scene.removeItem(i)
+            gui.scene.removeItem(i)
         self._finalize()
 
 class SwapState(ExpState):
     def _run(self):
-        start = long(now()*1000)
-        vid.swapBuffers()
-        print "Swap:", start, long(now()*1000)-start
+        stime = gui.swapBuffers()
+        print "Swap:", stime
         # record when the swap returns indicating the vertical retrace
         # just happened.
         
@@ -265,18 +276,18 @@ if __name__ == "__main__":
 
     from experiment import run
 
-    show(Text("+",loc=(400,300)),duration=1005)
-    wait(1005)
-    with Parallel():
-        show(Text("Jubba",loc=(400,300)),duration=1005)
-        show(Text("Jubba2",loc=(200,100)),duration=2010)
-        with Serial():
-            wait(1005)
-            show(Text("Wubba",loc=(300,200)),duration=1005)
-            show(Text("Wubba2",loc=(300,200)),duration=2010)
-        with Serial():
-            wait(2010)
-            show(Text("Lubba",loc=(500,400)),duration=2010)
+    # show(Text("+",loc=(400,300)),duration=1005)
+    # wait(1005)
+    # with Parallel():
+    #     show(Text("Jubba",loc=(400,300)),duration=1005)
+    #     show(Text("Jubba2",loc=(200,100)),duration=2010)
+    #     with Serial():
+    #         wait(1005)
+    #         show(Text("Wubba",loc=(300,200)),duration=1005)
+    #         show(Text("Wubba2",loc=(300,200)),duration=2010)
+    #     with Serial():
+    #         wait(2010)
+    #         show(Text("Lubba",loc=(500,400)),duration=2010)
 
     for i in range(10):
         show(Text(str(i),loc=(400,300)),duration=10)
@@ -305,7 +316,7 @@ if __name__ == "__main__":
 #         self._last_time = now()
 #         # add the items
 #         for i in self.items:
-#             vid.scene.addItem(i)
+#             gui.scene.addItem(i)
 
 #         exp.processEvents()
         
@@ -323,10 +334,10 @@ if __name__ == "__main__":
 
 #     def _removeItems(self):
 #         for i in self.items:
-#             vid.scene.removeItem(i)
+#             gui.scene.removeItem(i)
             
 #     def _updateScreen(self):
-#         vid.glw.swapBuffers()
+#         gui.glw.swapBuffers()
 #         new_time = now()
 #         print self.items[0].text(), new_time, new_time - self._last_time
 #         self._last_time = new_time 
@@ -347,7 +358,7 @@ if __name__ == "__main__":
 #         self._last_time = now()
 #         # add the items
 #         for i in self.items:
-#             vid.scene.removeItem(i)
+#             gui.scene.removeItem(i)
 
 #         if self.update_screen:
 #             # schedule the update
@@ -356,7 +367,7 @@ if __name__ == "__main__":
 #         QTimer.singleShot(0,self._finalize)
             
 #     def _updateScreen(self):
-#         vid.glw.swapBuffers()
+#         gui.glw.swapBuffers()
 #         new_time = now()
 #         print self.items[0].text(), new_time, new_time - self._last_time
 #         self._last_time = new_time 
@@ -367,7 +378,7 @@ if __name__ == "__main__":
 
 #     def onEntry(self, ev):
 #         self._last_time = now()
-#         vid.glw.swapBuffers()
+#         gui.glw.swapBuffers()
 #         new_time = now()
 #         print "update_screen", new_time, new_time - self._last_time
 #         self._last_time = new_time 

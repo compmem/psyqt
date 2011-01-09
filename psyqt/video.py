@@ -61,6 +61,7 @@ class GUI():
         self.glw.setAutoBufferSwap(False)
         self.view.setViewport(self.glw)
 
+        #self.view.showFullScreen()
         self.view.show()
 
         self.last_finish = 0
@@ -290,7 +291,7 @@ if __name__ == "__main__":
     #         show(Text("Lubba",loc=(500,400)),duration=2010)
 
     for i in range(10):
-        show(Text(str(i),loc=(400,300)),duration=10)
+        show(Text(str(i),loc=(400,300)),duration=205)
 
     # run the experiment
     run()

@@ -116,7 +116,7 @@ class Experiment(QApplication):
         # Set as initial state of state machine
         self._machine.addState(self._exp_state)
         self._machine.setInitialState(self._exp_state)
-
+        
         # set up timer
         self._last_time = now()
         self._new_time = now()
@@ -154,6 +154,10 @@ class Experiment(QApplication):
         if len(self._exp_state.children())>0 and \
                self._exp_state.initialState() is None:
             self._exp_state.setInitialState(exp._exp_state.children()[0])
+
+        # have it quit when done
+        exp._add_transition_if_needed(QuitState(parent=self._exp_state))
+
         # add the final state
         exp._add_transition_if_needed(QFinalState(parent=self._exp_state))
             
@@ -161,6 +165,7 @@ class Experiment(QApplication):
         self._machine.start()
 
         # enter event loop
+        self._stopped = False
         self.wait_until()
         #self.exec_()
 
@@ -171,18 +176,21 @@ class Experiment(QApplication):
         """
         if end_time is None:
             # no end time, so just loop
-            while True:
+            while not self._stopped:
                 self._new_time = now()
                 self.processEvents()
                 self._last_time = self._new_time
                 QThread.usleep(100)
         else:
-            while self._new_time < end_time:
+            while self._new_time < end_time and not self._stopped:
                 self._new_time = now()
                 self.processEvents()
                 self._last_time = self._new_time
                 QThread.usleep(100)
 
+    def stop(self):
+        self._stopped = True
+        
             
 # set up Parallel and serial parent states
 class Parent(QState):
@@ -218,18 +226,21 @@ class Parent(QState):
             self.cur_event_time = 0
         else:
             self.cur_event_time = self._saved_parent.cur_event_time
+
+        # save amount shifted
+        self.amount_advanced = 0
         
     def advance_timeline(self, offset):
         if self.childMode() == QState.ExclusiveStates:
             self.cur_event_time += offset
+            self.amount_advanced += offset
+        else:
+            if offset > self.amount_advanced:
+                self.amount_advanced = offset
         
     def __enter__(self):
         # push self as current parent
         exp._current_parent = self
-
-    def __exit__(self, type, value, tb):
-        # pop the parent state
-        exp._current_parent = self._saved_parent
 
     def __exit__(self, type, value, tb):
         # set initial state if necessary
@@ -241,6 +252,9 @@ class Parent(QState):
 
         # pop the parent state
         exp._current_parent = self._saved_parent
+
+        # advance the parent timeline the proper amount
+        exp._current_parent.advance_timeline(self.amount_advanced)
     
     def onEntry(self, ev):
         # set timeline start time
@@ -332,6 +346,22 @@ def wait(duration, jitter=None):
 #         print self._time
 #         self._finalize()
 
+
+class QuitState(ExpState):
+    def __init__(self, parent = None, event_time=None):
+        ExpState.__init__(self, parent=parent, event_time=event_time)
+    def _run(self):
+        print "quitting"
+        self._finalize()
+        exp.stop()
+
+def quit_exp():
+    s = QuitState(parent=exp._current_parent)
+    exp._add_transition_if_needed(s)
+    return s
+
+
+
 class PrinterState(ExpState):
     def __init__(self, txt, parent = None, event_time=None):
         self.txt = txt
@@ -342,7 +372,8 @@ class PrinterState(ExpState):
         self._time = (self._start_time,now()-self._start_time)
         print self._time
         self._finalize()
-
+    def __repr__(self):
+        return "PrinterState('%s')"%(self.txt)
 
 def printer(txt):
     s = PrinterState(txt, parent=exp._current_parent)
@@ -362,5 +393,10 @@ if __name__ == "__main__":
         with Serial():
             wait(1500)
             printer("Lubba")
-
+    wait(2000)
+    with Parallel():
+        printer("Pubba")
+        with Serial():
+            wait(1000)
+            printer("Subba")
     run()

@@ -55,7 +55,7 @@ class ExpState(QState):
         # can't have children other than those we define, so must be
         # set up as ExclusiveStates
         QState.__init__(self, QState.ExclusiveStates, parent=parent)
-        # set up dummy child states
+        # set up dummy initial and final child states
         self._iState = QState(parent=self)
         self._fState = QFinalState(parent=self)
         self.setInitialState(self._iState)
@@ -301,27 +301,6 @@ def run():
 
 
 # Some sample states
-
-# class WaitState(ExpState):
-#     def __init__(self, duration, jitter=None, parent = None):
-#         if jitter is None:
-#             jitter = 0
-#         else:
-#             if isinstance(jitter,list):
-#                 # treat it as a range
-#                 jitter = random.randint(jitter[0],jitter[1])
-#             else:
-#                 # start range at zero
-#                 jitter = random.randint(0,jitter)
-#         self.duration = duration + jitter
-#         ExpState.__init__(self, parent=parent)
-#     def onEntry(self, ev):
-#         QTimer.singleShot(self.duration,self._finalize)
-# def wait(duration, jitter=None):
-#     s = WaitState(duration, parent=exp._current_parent)
-#     exp._add_transition_if_needed(s)
-#     return s
-
 def wait(duration, jitter=None):
     if jitter is None:
         jitter = 0
@@ -334,19 +313,8 @@ def wait(duration, jitter=None):
             jitter = random.randint(0,jitter)
     duration = duration + jitter
     exp._current_parent.advance_timeline(duration)
+
     
-# class PrinterState(ExpState):
-#     def __init__(self, txt, parent = None):
-#         self.txt = txt
-#         ExpState.__init__(self, parent=parent)
-#     def onEntry(self, ev):
-#         self._start_time = now()
-#         print self.txt
-#         self._time = (self._start_time,now()-self._start_time)
-#         print self._time
-#         self._finalize()
-
-
 class QuitState(ExpState):
     def __init__(self, parent = None, event_time=None):
         ExpState.__init__(self, parent=parent, event_time=event_time)

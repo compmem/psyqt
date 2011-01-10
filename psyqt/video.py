@@ -148,9 +148,6 @@ class SwapState(ExpState):
         # record when the swap returns indicating the vertical retrace
         # just happened.
         
-        # essentially, we need to know when the vertical retrace
-        # actually happened
-
         self._finalize()
 
 class PreprocState(Parallel):
